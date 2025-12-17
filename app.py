@@ -68,6 +68,13 @@ class Document(db.Model):
     uploader = db.relationship('User', backref=db.backref('documents', lazy=True))
     # NOVA COLUNA PARA O TEXTO EXTRAÍDO
     content = db.Column(db.Text, nullable=True) 
+    
+    # --- NOVAS COLUNAS PARA VERSIONAMENTO ---
+    version_number = db.Column(db.Integer, nullable=False, default=1)
+    # parent_id aponta para o ID do documento "mestre" ou original
+    parent_id = db.Column(db.Integer, db.ForeignKey('document.id'), nullable=True) 
+    # Relacionamento recursivo para encontrar todas as versões
+    versions = db.relationship('Document', backref=db.backref('parent', remote_side=[id]), lazy=True)
 @login_manager.user_loader
 def load_user(user_id):
     return User.query.get(int(user_id))
@@ -89,7 +96,8 @@ def create_app():
     @login_required
     def dashboard():
         search_query = request.args.get('q', '') # Captura o termo de busca (q)
-        
+        # Filtra para mostrar apenas documentos "mestres" (parent_id é Nulo)
+        query = Document.query.filter_by(parent_id=None)
         if search_query:
             # Filtra os documentos onde o título OU o conteúdo (OCR) contêm a query
             documents = Document.query.filter(
@@ -184,33 +192,51 @@ def create_app():
     @app.route('/upload', methods=['POST'])
     @login_required
     def upload_file():
-    # ... (verifica se tem o arquivo no request, etc. - código anterior) ...
+        # ... (verificação de ficheiro e allowed_file) ...
 
         file = request.files['file']
-
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
+            
+            # --- LÓGICA DE VERSIONAMENTO ---
+            # Verifica se já existe um documento com este nome (sem parent_id)
+            existing_doc = Document.query.filter_by(filename=filename, parent_id=None).first()
+            
+            parent_id = None
+            version = 1
+
+            if existing_doc:
+                # Se existir, este novo upload é uma versão.
+                parent_id = existing_doc.id
+                # Encontra a versão máxima atual e incrementa
+                max_version = db.session.query(db.func.max(Document.version_number)).filter_by(parent_id=parent_id).scalar()
+                version = (max_version or 0) + 2 # +2 porque a original é 1 e a primeira versão é 2
+                
+                # Opcional: Você pode querer mudar o nome do arquivo físico para incluir a versão (ex: myfile_v2.pdf)
+                # Para simplificar, mantemos o mesmo nome físico por agora, o que substitui o arquivo no disco.
+
             filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath) 
+            file.save(filepath) # Salva/Substitui o arquivo físico no disco
 
-        # --- NOVA LÓGICA DE EXTRAÇÃO DE TEXTO ---
-        # Detecta o tipo de arquivo enviado
-        mimetype = file.mimetype 
-        extracted_content = extract_text_from_file(filepath, mimetype)
-        # ----------------------------------------
+            # Extração de Texto
+            mimetype = file.mimetype
+            extracted_content = extract_text_from_file(filepath, mimetype)
+            
+            # Salva no BD com os novos dados de versão
+            new_doc = Document(
+                filename=filename, 
+                storage_path=filepath, 
+                uploader_id=current_user.id, 
+                content=extracted_content,
+                version_number=version,
+                parent_id=parent_id # Define o link para a versão original
+            )
+            db.session.add(new_doc)
+            db.session.commit()
 
-        # Salva os metadados E o conteúdo no banco de dados
-        new_doc = Document(
-            filename=filename, 
-            storage_path=filepath, 
-            uploader_id=current_user.id,
-            content=extracted_content # <--- Salvando o texto extraído
-        ) 
-        db.session.add(new_doc)
-        db.session.commit()
-
-        flash('Arquivo enviado com sucesso e texto extraído!', 'success')
-        return redirect(url_for('dashboard'))
+            flash(f'Arquivo enviado como Versão {version} com sucesso!', 'success')
+            return redirect(url_for('dashboard'))
+        
 
     @app.route('/download/<int:doc_id>')
     @login_required
