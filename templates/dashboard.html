@@ -138,6 +138,20 @@
 
 <div class="main-container">
     
+    <!-- formulário de pesquisa -->
+<div class="main-container">
+    <form class="d-flex mb-4" method="GET" action="{{ url_for('dashboard') }}">
+        <div class="input-group">
+            <input type="search" name="q" class="form-control file-input-custom" placeholder="Pesquisar por título ou conteúdo do documento..." aria-label="Search" value="{{ search_query or '' }}">
+            <button class="btn btn-upload" type="submit"><i class="bi bi-search"></i> Pesquisar</button>
+        </div>
+    </form>
+    
+    <!-- Restante do conteúdo do main-container continua aqui... -->
+    <!-- (Mensagens Flash, Coluna de Upload, Lista de Documentos, etc.) -->
+</div>
+
+
     <!-- Mensagens Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
