@@ -5,6 +5,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 import pytesseract
 from pdf2image import convert_from_path 
+from flask_mail import Mail, Message
 import os
 
 basedir = os.path.abspath(os.path.dirname(__file__))
@@ -15,6 +16,8 @@ login_manager.login_view = 'login'
 
 UPLOAD_FOLDER = os.path.join(basedir, 'uploads')
 ALLOWED_EXTENSIONS = {'txt', 'pdf', 'png', 'jpg', 'jpeg', 'gif', 'docx'}
+
+mail = Mail()
 
 # --- FUNÇÕES AUXILIARES DE EXTRAÇÃO DE TEXTO ---
 def extract_text_from_file(filepath, mimetype):
@@ -68,7 +71,8 @@ class Document(db.Model):
     uploader = db.relationship('User', backref=db.backref('documents', lazy=True))
     # NOVA COLUNA PARA O TEXTO EXTRAÍDO
     content = db.Column(db.Text, nullable=True) 
-    
+    # --- NOVA COLUNA PARA O FLUXO DE TRABALHO ---
+    status = db.Column(db.String(50), nullable=False, default='Pendente') 
     # --- NOVAS COLUNAS PARA VERSIONAMENTO ---
     version_number = db.Column(db.Integer, nullable=False, default=1)
     # parent_id aponta para o ID do documento "mestre" ou original
@@ -86,9 +90,17 @@ def create_app():
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
+    app.config['MAIL_SERVER'] = 'smtp.gmail.com'
+    app.config['MAIL_PORT'] = 465
+    app.config['MAIL_USE_SSL'] = True
+    app.config['MAIL_USERNAME'] = 'quiamuxinda@gmail.com' # Substitua pelo seu email
+    app.config['MAIL_PASSWORD'] = 'fply jsth nrro vnwh'  # Substitua pela sua senha de APP (não a senha normal do email)
+    app.config['MAIL_DEFAULT_SENDER'] = 'asjwebdesigner@gmail.com'
+
+
     db.init_app(app)
     login_manager.init_app(app)
-
+    mail.init_app(app) # Inicializa o Flask-Mail aqui
     # --- ROTAS ---
 
     @app.route('/')
@@ -192,51 +204,68 @@ def create_app():
     @app.route('/upload', methods=['POST'])
     @login_required
     def upload_file():
-        # ... (verificação de ficheiro e allowed_file) ...
+        # Captura o arquivo do formulário
+        file = request.files.get('file')
 
-        file = request.files['file']
+        # Se não houver arquivo no formulário, avisa e redireciona
+        if not file:
+            flash('Nenhum arquivo selecionado.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        # Se o arquivo existe, mas o nome está vazio (erro de upload)
+        if file.filename == '':
+            flash('Nome de arquivo inválido.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        # Se o tipo de arquivo não é permitido
+        if not allowed_file(file.filename):
+            flash('Tipo de arquivo não permitido.', 'danger')
+            return redirect(url_for('dashboard'))
+
+        # Se tudo estiver OK, processa o upload
         if file and allowed_file(file.filename):
             filename = secure_filename(file.filename)
-            
-            # --- LÓGICA DE VERSIONAMENTO ---
-            # Verifica se já existe um documento com este nome (sem parent_id)
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+
+            # Lógica de Extração de Texto e Versionamento (seu código anterior)
             existing_doc = Document.query.filter_by(filename=filename, parent_id=None).first()
-            
             parent_id = None
             version = 1
-
             if existing_doc:
-                # Se existir, este novo upload é uma versão.
                 parent_id = existing_doc.id
-                # Encontra a versão máxima atual e incrementa
                 max_version = db.session.query(db.func.max(Document.version_number)).filter_by(parent_id=parent_id).scalar()
-                version = (max_version or 0) + 2 # +2 porque a original é 1 e a primeira versão é 2
-                
-                # Opcional: Você pode querer mudar o nome do arquivo físico para incluir a versão (ex: myfile_v2.pdf)
-                # Para simplificar, mantemos o mesmo nome físico por agora, o que substitui o arquivo no disco.
+                version = (max_version or 0) + 2
 
-            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
-            file.save(filepath) # Salva/Substitui o arquivo físico no disco
-
-            # Extração de Texto
             mimetype = file.mimetype
             extracted_content = extract_text_from_file(filepath, mimetype)
             
-            # Salva no BD com os novos dados de versão
-            new_doc = Document(
-                filename=filename, 
-                storage_path=filepath, 
-                uploader_id=current_user.id, 
-                content=extracted_content,
-                version_number=version,
-                parent_id=parent_id # Define o link para a versão original
-            )
+            new_doc = Document(filename=filename, storage_path=filepath, uploader_id=current_user.id, content=extracted_content, version_number=version, parent_id=parent_id)
             db.session.add(new_doc)
             db.session.commit()
+            # --- CHAMADA DA NOVA FUNÇÃO ---
+            send_notification_email(filename, current_user.username)
 
             flash(f'Arquivo enviado como Versão {version} com sucesso!', 'success')
             return redirect(url_for('dashboard'))
-        
+
+        # Esta linha final serve como uma garantia de retorno, embora a lógica acima já cubra tudo
+        return redirect(url_for('dashboard'))
+
+    @app.route('/approve_doc/<int:doc_id>', methods=['POST'])
+    @login_required
+    def approve_doc(doc_id):
+        # Apenas admins podem aprovar
+        if not current_user.is_admin():
+            flash('Acesso negado. Apenas administradores podem aprovar documentos.', 'danger')
+            return redirect(url_for('dashboard'))
+            
+        doc = Document.query.get_or_404(doc_id)
+        doc.status = 'Aprovado'
+        db.session.commit()
+        flash(f'Documento "{doc.filename}" aprovado com sucesso!', 'success')
+        return redirect(url_for('dashboard'))
+    
 
     @app.route('/download/<int:doc_id>')
     @login_required
@@ -247,6 +276,13 @@ def create_app():
     @app.route('/delete/<int:doc_id>', methods=['POST'])
     @login_required
     def delete_file(doc_id):
+        
+        # --- VERIFICAÇÃO DE SEGURANÇA ---
+        if not current_user.is_admin():
+            flash('Acesso negado! Apenas administradores podem excluir documentos.', 'danger')
+            return redirect(url_for('dashboard'))
+        # --------------------------------
+
         doc = Document.query.get_or_404(doc_id)
         
         # 1. Tentar remover o arquivo físico da pasta uploads
@@ -270,6 +306,16 @@ def create_app():
 
 
     return app
+
+def send_notification_email(filename, username):
+    msg = Message("Novo Documento Carregado: " + filename, recipients=['quiamuxinda@gmail.com']) # Envia para você
+    msg.body = f"O usuário {username} acabou de carregar um novo documento: {filename}. Por favor, verifique a dashboard para aprovação."
+    try:
+        mail.send(msg)
+        print("E-mail de notificação enviado com sucesso!")
+    except Exception as e:
+        print(f"Falha ao enviar e-mail: {e}")
+
 
 if __name__ == '__main__':
     app = create_app()

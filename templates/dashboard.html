@@ -12,145 +12,49 @@
     <link rel="stylesheet" href="cdn.jsdelivr.net">
     
     <style>
-        :root {
-            --primary-color: #4f46e5;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-main: #f8fafc;
-            --text-muted: #94a3b8;
-        }
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            min-height: 100vh;
-            margin: 0;
-        }
-
-        /* Navbar / Header */
-        .navbar {
-            background-color: var(--card-bg);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            padding: 1rem 2rem;
-        }
-
-        .brand-logo {
-            background: var(--primary-color);
-            color: white;
-            padding: 5px 12px;
-            border-radius: 8px;
-            font-weight: 700;
-            text-decoration: none;
-            margin-right: 10px;
-        }
-
-        /* Container Principal */
-        .main-container {
-            padding: 3rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        /* Cards Estilizados */
-        .custom-card {
-            background-color: var(--card-bg);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 1rem;
-            padding: 2rem;
-            margin-bottom: 2rem;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
-        }
-
-        /* Tabela Moderna */
-        .table {
-            color: var(--text-main);
-            margin-bottom: 0;
-        }
-
-        .table thead th {
-            background-color: rgba(255, 255, 255, 0.03);
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            color: var(--text-muted);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.75rem;
-            letter-spacing: 0.05em;
-            padding: 1rem;
-        }
-
-        .table tbody td {
-            padding: 1rem;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-            vertical-align: middle;
-        }
-
-        .table tbody tr:hover {
-            background-color: rgba(255, 255, 255, 0.02);
-        }
-
-        /* Links e Botões */
+        :root { --primary-color: #4f46e5; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; }
+        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; margin: 0; }
+        .navbar { background-color: var(--card-bg); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem; }
+        .brand-logo { background: var(--primary-color); color: white; padding: 5px 12px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-right: 10px; }
+        .main-container { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
+        .custom-card { background-color: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
+        .table { color: var(--text-main); margin-bottom: 0; }
+        .table thead th { background-color: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 1rem; }
+        .table tbody td { padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: middle; }
+        .table tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
         a { color: var(--primary-color); text-decoration: none; transition: 0.2s; }
         a:hover { color: #818cf8; }
-
-        .btn-upload {
-            background-color: var(--primary-color);
-            border: none;
-            padding: 0.6rem 1.5rem;
-            border-radius: 0.5rem;
-            font-weight: 600;
-            color: white;
-        }
-
-        .file-input-custom {
-            background-color: #0f172a;
-            border: 1px solid #334155;
-            color: white;
-            border-radius: 0.5rem;
-        }
-
-        .btn-logout {
-            color: #ef4444;
-            font-weight: 600;
-            font-size: 0.9rem;
-        }
+        .btn-upload { background-color: var(--primary-color); border: none; padding: 0.6rem 1.5rem; border-radius: 0.5rem; font-weight: 600; color: white; }
+        .file-input-custom { background-color: #0f172a; border: 1px solid #334155; color: white; border-radius: 0.5rem; }
+        .btn-logout { color: #ef4444; font-weight: 600; font-size: 0.9rem; }
     </style>
 </head>
 <body>
 
 <!-- Navbar -->
- 
 <nav class="navbar d-flex justify-content-between align-items-center">
     <div class="d-flex align-items-center">
         <a href="#" class="brand-logo">GD</a>
         <span class="fw-bold">Gestão de Documentos</span>
     </div>
-   <div class="d-flex align-items-center gap-4">
-    <!-- O link só aparece se o usuário for 'admin' -->
-    {% if current_user.username == 'admin' %}
-        <a href="{{ url_for('manage_users') }}" class="small text-secondary fw-semibold">GERIR USUÁRIOS</a>
-    {% endif %}
-    
-    <a href="{{ url_for('logout') }}" class="btn-logout text-uppercase">Sair <i class="bi bi-box-arrow-right"></i></a>
-</div>
-
+    <div class="d-flex align-items-center gap-4">
+        <!-- O link só aparece se o usuário for 'admin' -->
+        {% if current_user.is_admin() %}
+            <a href="{{ url_for('manage_users') }}" class="small text-secondary fw-semibold">GERIR USUÁRIOS</a>
+        {% endif %}
+        <a href="{{ url_for('logout') }}" class="btn-logout text-uppercase">Sair <i class="bi bi-box-arrow-right"></i></a>
+    </div>
 </nav>
 
 <div class="main-container">
     
-    <!-- formulário de pesquisa -->
-<div class="main-container">
+    <!-- Formulário de Pesquisa (da Fase 6) -->
     <form class="d-flex mb-4" method="GET" action="{{ url_for('dashboard') }}">
         <div class="input-group">
-            <input type="search" name="q" class="form-control file-input-custom" placeholder="Pesquisar por título ou conteúdo do documento..." aria-label="Search" value="{{ search_query or '' }}">
+            <input type="search" name="q" class="form-control file-input-custom" placeholder="Pesquisar por título ou conteúdo do documento..." value="{{ search_query or '' }}">
             <button class="btn btn-upload" type="submit"><i class="bi bi-search"></i> Pesquisar</button>
         </div>
     </form>
-    
-    <!-- Restante do conteúdo do main-container continua aqui... -->
-    <!-- (Mensagens Flash, Coluna de Upload, Lista de Documentos, etc.) -->
-</div>
-
 
     <!-- Mensagens Flash -->
     {% with messages = get_flashed_messages(with_categories=true) %}
@@ -168,7 +72,7 @@
         <div class="col-lg-4">
             <div class="custom-card">
                 <h5 class="fw-bold mb-3"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Novo Documento</h5>
-                <p class="text-secondary small mb-4">Selecione ficheiros PDF, PNG ou DOCX para carregar.</p>
+                <p class="text-secondary small mb-4">Selecione ficheiros PDF, PNG ou DOCX.</p>
                 
                 <form method="POST" action="/upload" enctype="multipart/form-data">
                     <div class="mb-3">
@@ -193,7 +97,8 @@
                                 <th>Nome do Arquivo</th>
                                 <th>Data</th>
                                 <th>Uploader</th>
-                                <th>Ações</th>
+                                <th>Status</th>
+                                <th class="text-center">Ações</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -209,17 +114,37 @@
                                 <td>
                                     <span class="badge bg-dark text-secondary border border-secondary">{{ doc.uploader.username }}</span>
                                 </td>
+                                <td>
+                                    {% if doc.status == 'Pendente' %}
+                                    <span class="badge bg-warning text-dark">Pendente</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Aprovado</span>
+                                    {% endif %}
+                                </td>
+
                                 <td class="text-center">
-    <form action="{{ url_for('delete_file', doc_id=doc.id) }}" method="POST" style="display:inline;">
-        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('Tem certeza que deseja excluir este documento?')">
-            <i class="bi bi-trash3-fill"></i>
-        </button>
-    </form>
-</td>
+                                    <!-- Botão de Aprovação (só para admins e se Pendente) -->
+                                    {% if current_user.is_admin() and doc.status == 'Pendente' %}
+                                    <form action="{{ url_for('approve_doc', doc_id=doc.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Aprovar este documento?')">
+                                            Aprovar
+                                        </button>
+                                    </form>
+                                    {% endif %}
+
+                                    <!-- Botão de Excluir (só para admins) -->
+                                    {% if current_user.is_admin() %}
+                                    <form action="{{ url_for('delete_file', doc_id=doc.id) }}" method="POST" style="display:inline;">
+                                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('Tem certeza que deseja excluir este documento?')">
+                                            <i class="bi bi-trash3-fill"></i>
+                                        </button>
+                                    </form>
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% else %}
                             <tr>
-                                <td colspan="3" class="text-center text-secondary py-5">Nenhum documento encontrado.</td>
+                                <td colspan="5" class="text-center text-secondary py-5">Nenhum documento encontrado.</td>
                             </tr>
                             {% endfor %}
                         </tbody>
