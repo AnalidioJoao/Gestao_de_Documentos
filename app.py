@@ -52,7 +52,7 @@ def allowed_file(filename):
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True)
     username = db.Column(db.String(80), unique=True, nullable=False)
-    password_hash = db.Column(db.String(128), nullable=False)
+    password_hash = db.Column(db.String(255), nullable=False)
     role = db.Column(db.String(20), nullable=False, default='user') 
     def set_password(self, password):
         self.password_hash = generate_password_hash(password)
@@ -87,7 +87,7 @@ def create_app():
     app = Flask(__name__)
     app.secret_key = 'sua_chave_secreta_muito_segura' 
     app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///' + os.path.join(basedir, 'site.db')
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql://postgres:Ana2025@localhost:5432/gestaodoc'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
     app.config['MAIL_SERVER'] = 'smtp.gmail.com'
