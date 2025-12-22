@@ -1,17 +1,14 @@
-from app import create_app, db, User
+from app import create_app, db, User, Direction, Department, DocumentType
 
-# Criamos a instância da aplicação
+# Cria a instância da aplicação
 app = create_app()
 
 with app.app_context():
+    # Apenas cria as tabelas. 
+    # Nao tentamos ler dados ainda, para evitar o erro de coluna inexistente.
     db.create_all()
     print("Tabelas criadas com sucesso (v2)!")
-    
-    # Cria o admin logo aqui
-    if not User.query.filter_by(username='admin').first():
-        admin = User(username='admin', role='admin')
-        admin.set_password('123456')
-        db.session.add(admin)
-        db.session.commit()
-        print("Admin recriado com sucesso!")
 
+    # --- INSERÇÃO DE DADOS DE TESTE (Em um novo script ou manualmente) ---
+    # Este script agora termina aqui, para garantir que as tabelas existam 
+    # antes de tentar ler delas.

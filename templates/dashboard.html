@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="pt">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,151 +11,286 @@
     <link href="fonts.googleapis.com" rel="stylesheet">
     <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="cdn.jsdelivr.net">
-    
+
     <style>
-        :root { --primary-color: #4f46e5; --bg-color: #0f172a; --card-bg: #1e293b; --text-main: #f8fafc; --text-muted: #94a3b8; }
-        body { font-family: 'Inter', sans-serif; background-color: var(--bg-color); color: var(--text-main); min-height: 100vh; margin: 0; }
-        .navbar { background-color: var(--card-bg); border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding: 1rem 2rem; }
-        .brand-logo { background: var(--primary-color); color: white; padding: 5px 12px; border-radius: 8px; font-weight: 700; text-decoration: none; margin-right: 10px; }
-        .main-container { padding: 3rem 2rem; max-width: 1200px; margin: 0 auto; }
-        .custom-card { background-color: var(--card-bg); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 1rem; padding: 2rem; margin-bottom: 2rem; box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3); }
-        .table { color: var(--text-main); margin-bottom: 0; }
-        .table thead th { background-color: rgba(255, 255, 255, 0.03); border-bottom: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-muted); font-weight: 600; text-transform: uppercase; font-size: 0.75rem; letter-spacing: 0.05em; padding: 1rem; }
-        .table tbody td { padding: 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); vertical-align: middle; }
-        .table tbody tr:hover { background-color: rgba(255, 255, 255, 0.02); }
-        a { color: var(--primary-color); text-decoration: none; transition: 0.2s; }
-        a:hover { color: #818cf8; }
-        .btn-upload { background-color: var(--primary-color); border: none; padding: 0.6rem 1.5rem; border-radius: 0.5rem; font-weight: 600; color: white; }
-        .file-input-custom { background-color: #0f172a; border: 1px solid #334155; color: white; border-radius: 0.5rem; }
-        .btn-logout { color: #ef4444; font-weight: 600; font-size: 0.9rem; }
+        :root {
+            --primary-color: #4f46e5;
+            --bg-color: #0f172a;
+            --card-bg: #1e293b;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            min-height: 100vh;
+            margin: 0;
+        }
+
+        .navbar {
+            background-color: var(--card-bg);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+        }
+
+        .brand-logo {
+            background: var(--primary-color);
+            color: white;
+            padding: 5px 12px;
+            border-radius: 8px;
+            font-weight: 700;
+            text-decoration: none;
+            margin-right: 10px;
+        }
+
+        .main-container {
+            padding: 3rem 2rem;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .custom-card {
+            background-color: var(--card-bg);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 1rem;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
+        }
+
+        .table {
+            color: var(--text-main);
+            margin-bottom: 0;
+        }
+
+        .table thead th {
+            background-color: rgba(255, 255, 255, 0.03);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.05em;
+            padding: 1rem;
+        }
+
+        .table tbody td {
+            padding: 1rem;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            vertical-align: middle;
+        }
+
+        .table tbody tr:hover {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        a {
+            color: var(--primary-color);
+            text-decoration: none;
+            transition: 0.2s;
+        }
+
+        a:hover {
+            color: #818cf8;
+        }
+
+        .btn-upload {
+            background-color: var(--primary-color);
+            border: none;
+            padding: 0.6rem 1.5rem;
+            border-radius: 0.5rem;
+            font-weight: 600;
+            color: white;
+        }
+
+        .file-input-custom {
+            background-color: #0f172a;
+            border: 1px solid #334155;
+            color: white;
+            border-radius: 0.5rem;
+        }
+
+        .btn-logout {
+            color: #ef4444;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
     </style>
 </head>
+
 <body>
 
-<!-- Navbar -->
-<nav class="navbar d-flex justify-content-between align-items-center">
-    <div class="d-flex align-items-center">
-        <a href="#" class="brand-logo">GD</a>
-        <span class="fw-bold">Gestão de Documentos</span>
-    </div>
-    <div class="d-flex align-items-center gap-4">
-        <!-- O link só aparece se o usuário for 'admin' -->
-        {% if current_user.is_admin() %}
-            <a href="{{ url_for('manage_users') }}" class="small text-secondary fw-semibold">GERIR USUÁRIOS</a>
-        {% endif %}
-        <a href="{{ url_for('logout') }}" class="btn-logout text-uppercase">Sair <i class="bi bi-box-arrow-right"></i></a>
-    </div>
-</nav>
-
-<div class="main-container">
-    
-    <!-- Formulário de Pesquisa (da Fase 6) -->
-    <form class="d-flex mb-4" method="GET" action="{{ url_for('dashboard') }}">
-        <div class="input-group">
-            <input type="search" name="q" class="form-control file-input-custom" placeholder="Pesquisar por título ou conteúdo do documento..." value="{{ search_query or '' }}">
-            <button class="btn btn-upload" type="submit"><i class="bi bi-search"></i> Pesquisar</button>
+    <!-- Navbar -->
+    <nav class="navbar d-flex justify-content-between align-items-center">
+        <div class="d-flex align-items-center">
+            <a href="#" class="brand-logo">GD</a>
+            <span class="fw-bold">Gestão de Documentos</span>
         </div>
-    </form>
+        <div class="d-flex align-items-center gap-4">
+            <!-- O link só aparece se o usuário for 'admin' -->
+            {% if current_user.is_admin() %}
+            <a href="{{ url_for('manage_users') }}" class="small text-secondary fw-semibold">GERIR USUÁRIOS</a>
+            {% endif %}
+            <a href="{{ url_for('logout') }}" class="btn-logout text-uppercase">Sair <i
+                    class="bi bi-box-arrow-right"></i></a>
+        </div>
+    </nav>
 
-    <!-- Mensagens Flash -->
-    {% with messages = get_flashed_messages(with_categories=true) %}
-      {% if messages %}
-        {% for category, message in messages %}
-          <div class="alert alert-info border-0 shadow-sm mb-4" style="background-color: var(--card-bg); color: white;">
-            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
-          </div>
-        {% endfor %}
-      {% endif %}
-    {% endwith %}
+    <div class="main-container">
 
-    <div class="row">
-        <!-- Coluna de Upload -->
-        <div class="col-lg-4">
-            <div class="custom-card">
-                <h5 class="fw-bold mb-3"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Novo Documento</h5>
-                <p class="text-secondary small mb-4">Selecione ficheiros PDF, PNG ou DOCX.</p>
-                
-                <form method="POST" action="/upload" enctype="multipart/form-data">
-                    <div class="mb-3">
-                        <input type="file" name="file" class="form-control file-input-custom" required>
+        <!-- Formulário de Pesquisa (da Fase 6) -->
+        <form class="d-flex mb-4" method="GET" action="{{ url_for('dashboard') }}">
+            <div class="input-group">
+                <input type="search" name="q" class="form-control file-input-custom"
+                    placeholder="Pesquisar por título ou conteúdo do documento..." value="{{ search_query or '' }}">
+                <button class="btn btn-upload" type="submit"><i class="bi bi-search"></i> Pesquisar</button>
+            </div>
+        </form>
+        
+
+        <div class="row mb-5">
+            <div class="col-md-4">
+                <div class="card text-white bg-dark">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ total_docs }}</h5>
+                        <p class="card-text text-secondary">Total de Documentos no Depto.</p>
                     </div>
-                    <div class="d-grid">
-                        <button type="submit" class="btn btn-upload">Iniciar Upload</button>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-warning">
+                    <div class="card-body">
+                        <h5 class="card-title text-dark">{{ total_pendente }}</h5>
+                        <p class="card-text text-dark">Documentos Pendentes</p>
                     </div>
-                </form>
+                </div>
+            </div>
+            <div class="col-md-4">
+                <div class="card text-white bg-success">
+                    <div class="card-body">
+                        <h5 class="card-title">{{ total_aprovado }}</h5>
+                        <p class="card-text">Documentos Aprovados</p>
+                    </div>
+                </div>
             </div>
         </div>
 
-        <!-- Lista de Documentos -->
-        <div class="col-lg-8">
-            <div class="custom-card">
-                <h5 class="fw-bold mb-4"><i class="bi bi-file-earmark-text-fill me-2"></i> Documentos Recentes</h5>
-                
-                <div class="table-responsive">
-                    <table class="table">
-                        <thead>
-                            <tr>
-                                <th>Nome do Arquivo</th>
-                                <th>Data</th>
-                                <th>Uploader</th>
-                                <th>Status</th>
-                                <th class="text-center">Ações</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            {% for doc in documents %}
-                            <tr>
-                                <td>
-                                    <i class="bi bi-file-earmark-pdf me-2 text-secondary"></i>
-                                    <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="fw-medium">
-                                        {{ doc.filename }}
-                                    </a>
-                                </td>
-                                <td class="small text-secondary">{{ doc.upload_date.strftime('%d/%m/%Y') }}</td>
-                                <td>
-                                    <span class="badge bg-dark text-secondary border border-secondary">{{ doc.uploader.username }}</span>
-                                </td>
-                                <td>
-                                    {% if doc.status == 'Pendente' %}
-                                    <span class="badge bg-warning text-dark">Pendente</span>
+        <!-- Restante do conteúdo (Upload, Tabela) começa aqui... -->
+
+        <!-- Mensagens Flash -->
+        {% with messages = get_flashed_messages(with_categories=true) %}
+        {% if messages %}
+        {% for category, message in messages %}
+        <div class="alert alert-info border-0 shadow-sm mb-4" style="background-color: var(--card-bg); color: white;">
+            <i class="bi bi-info-circle-fill me-2"></i> {{ message }}
+        </div>
+        {% endfor %}
+        {% endif %}
+        {% endwith %}
+
+        <div class="row">
+            <!-- Coluna de Upload -->
+            <div class="col-lg-4">
+                <div class="custom-card">
+                    <h5 class="fw-bold mb-3"><i class="bi bi-cloud-arrow-up-fill me-2"></i> Novo Documento</h5>
+                    <p class="text-secondary small mb-4">Selecione ficheiros PDF, PNG ou DOCX.</p>
+
+                    <form method="POST" action="/upload" enctype="multipart/form-data">
+                        <div class="mb-3">
+                            <input type="file" name="file" class="form-control file-input-custom" required>
+                        </div>
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-upload">Iniciar Upload</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- Lista de Documentos -->
+            <div class="col-lg-8">
+                <div class="custom-card">
+                    <h5 class="fw-bold mb-4"><i class="bi bi-file-earmark-text-fill me-2"></i> Documentos Recentes</h5>
+
+                    <div class="table-responsive">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th>Nome do Arquivo</th>
+                                    <th>Data</th>
+                                    <th>Uploader</th>
+                                    <th>Status</th>
+                                    <th class="text-center">Ações</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- O loop FOR começa aqui -->
+                                {% for doc in documents %}
+                                <tr>
+                                    <td>
+                                        <i class="bi bi-file-earmark-pdf me-2 text-secondary"></i>
+                                        <a href="{{ url_for('download_file', doc_id=doc.id) }}" class="fw-medium">
+                                            {{ doc.filename }}
+                                        </a>
+                                    </td>
+                                    <td class="small text-secondary">{{ doc.upload_date.strftime('%d/%m/%Y') }}</td>
+                                    <td>
+                                        <span class="badge bg-dark text-secondary border border-secondary">{{
+                                            doc.uploader.username }}</span>
+                                    </td>
+                                    <td>
+                                        {% if doc.status == 'Pendente' %}
+                                        <span class="badge bg-warning text-dark">Pendente</span>
+                                        {% else %}
+                                        <span class="badge bg-success">Aprovado</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-center">
+                                        <!-- Botão de Aprovação (só para admins e se Pendente) -->
+                                        {% if current_user.is_admin() and doc.status == 'Pendente' %}
+                                        <form action="{{ url_for('approve_doc', doc_id=doc.id) }}" method="POST"
+                                            style="display:inline;">
+                                            <button type="submit" class="btn btn-sm btn-outline-success"
+                                                onclick="return confirm('Aprovar este documento?')">
+                                                Aprovar
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                        <!-- Botão de Excluir (só para admins) -->
+                                        {% if current_user.is_admin() %}
+                                        <form action="{{ url_for('delete_file', doc_id=doc.id) }}" method="POST"
+                                            style="display:inline;">
+                                            <button type="submit" class="btn btn-link text-danger p-0"
+                                                onclick="return confirm('Tem certeza que deseja excluir este documento?')">
+                                                <i class="bi bi-trash3-fill"></i>
+                                            </button>
+                                        </form>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                                <!-- O loop FOR termina aqui -->
+                                {% else %}
+                                <tr>
+                                    {% if search_query %}
+                                    <td colspan="5" class="text-center text-secondary py-5">Nenhum documento encontrado
+                                        para "{{ search_query }}".</td>
                                     {% else %}
-                                    <span class="badge bg-success">Aprovado</span>
+                                    <td colspan="5" class="text-center text-secondary py-5">Utilize a barra de pesquisa
+                                        acima para encontrar documentos do seu departamento.</td>
                                     {% endif %}
-                                </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
 
-                                <td class="text-center">
-                                    <!-- Botão de Aprovação (só para admins e se Pendente) -->
-                                    {% if current_user.is_admin() and doc.status == 'Pendente' %}
-                                    <form action="{{ url_for('approve_doc', doc_id=doc.id) }}" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn btn-sm btn-outline-success" onclick="return confirm('Aprovar este documento?')">
-                                            Aprovar
-                                        </button>
-                                    </form>
-                                    {% endif %}
-
-                                    <!-- Botão de Excluir (só para admins) -->
-                                    {% if current_user.is_admin() %}
-                                    <form action="{{ url_for('delete_file', doc_id=doc.id) }}" method="POST" style="display:inline;">
-                                        <button type="submit" class="btn btn-link text-danger p-0" onclick="return confirm('Tem certeza que deseja excluir este documento?')">
-                                            <i class="bi bi-trash3-fill"></i>
-                                        </button>
-                                    </form>
-                                    {% endif %}
-                                </td>
-                            </tr>
-                            {% else %}
-                            <tr>
-                                <td colspan="5" class="text-center text-secondary py-5">Nenhum documento encontrado.</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<script src="cdn.jsdelivr.net"></script>
+    <script src="cdn.jsdelivr.net"></script>
 </body>
+
 </html>
